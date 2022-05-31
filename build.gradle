@@ -8,16 +8,12 @@
 plugins {
 	// support for groovy
 	id 'groovy'
-	// groovy code linter
-	id 'codenarc'
-	// test code coverage plugin
-	id 'net.saliman.cobertura' version '4.0.0'
-	// finally! tag version is software version!
-	id 'pl.allegro.tech.build.axion-release' version '1.13.9'
 	// support for the api keyword in the dependencies section
 	id 'java-library'
 	// required by jitpack
 	id 'maven-publish'
+	// finally! tag version is software version!
+	id 'pl.allegro.tech.build.axion-release' version '1.13.9'
 }
 
 // [general] configuration
@@ -66,27 +62,6 @@ dependencies {
 	testImplementation (
 		"org.spockframework:spock-core:$spockVersion"
 	)
-}
-
-// codenarc groovy source analyses
-codenarc{
-	toolVersion = "$codenarcVersion"
-
-	codenarcMain {
-		configFile = rootProject.file('config/codenarc/ruleset.groovy')
-		exclude "**/package-info.*"
-		ignoreFailures true       // does not block builds
-		maxPriority1Violations 0
-		maxPriority2Violations 10
-		maxPriority3Violations 20
-	}
-	codenarcTest {
-		configFile = rootProject.file('config/codenarc/ruleset-test.groovy')
-		ignoreFailures true
-		maxPriority1Violations 0
-		maxPriority2Violations 10
-		maxPriority3Violations 20
-	}
 }
 
 // [tasks] configuration //
