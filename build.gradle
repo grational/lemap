@@ -23,7 +23,6 @@ project.ext {
 	codenarcVersion     = '3.0.1'
 	slf4jVersion        = '1.7.36'
 	commonsTextVersion  = '1.9'
-
 }
 
 scmVersion {
