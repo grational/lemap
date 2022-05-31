@@ -8,35 +8,39 @@
 plugins {
 	// support for groovy
 	id 'groovy'
-	// autogenerate eclipse project files
-	id 'eclipse'
-	// create an html index linking every report generated
-	id 'build-dashboard'
-	// view of the project (jars used, navigable source tree)
-	id 'project-report'
 	// groovy code linter
 	id 'codenarc'
 	// test code coverage plugin
-	id 'net.saliman.cobertura' version '2.5.0'
+	id 'net.saliman.cobertura' version '4.0.0'
+	// finally! tag version is software version!
+	id 'pl.allegro.tech.build.axion-release' version '1.13.9'
+	// support for the api keyword in the dependencies section
+	id 'java-library'
+	// required by jitpack
+	id 'maven-publish'
 }
 
 // [general] configuration
 project.ext {
-	groovyVersion       = '2.4.13'
-	gradleVersion       = '4.5.1'
-	spockVersion        = '1.1-groovy-2.4'
-	codenarcVersion     = '0.27.0'
-	slf4jVersion        = '1.7.25'
-	commonsTextVersion  = '1.2'
+	groovyVersion       = '3.0.10'
+	spockVersion        = '2.1-groovy-3.0'
+	codenarcVersion     = '3.0.1'
+	slf4jVersion        = '1.7.36'
+	commonsTextVersion  = '1.9'
 
+}
+
+scmVersion {
+	tag {
+		prefix = 'release-'
+	}
 }
 
 project.with {
 	//project.name is set in the settings.gradle with rootProject.name
-	group                 "it.grational.lemap"
-	version               "0.1.0" // (remove -SNAPSHOT for releases)
+	group                 'it.grational'
+	version               scmVersion.version
 	description           "A collection of maps with peculiars matching functions"
-	wrapper.gradleVersion "$gradleVersion"
 }
 // [crosscompile] source and target java version
 allprojects {
@@ -45,13 +49,13 @@ allprojects {
 }
 
 repositories {
-	jcenter()
+	mavenCentral()
 }
 
 dependencies {
-	compile (
+	implementation (
 		// Groovy language support
-		"org.codehaus.groovy:groovy-all:$groovyVersion",
+		"org.codehaus.groovy:groovy:$groovyVersion",
 		// Slf4j dependencies
 		"org.slf4j:slf4j-api:$slf4jVersion",
 		// for a revised implementation of the Levenshtein strings' distance
@@ -59,7 +63,9 @@ dependencies {
 	)
 
 	// We use the awesome Spock testing and specification framework
-	testCompile "org.spockframework:spock-core:$spockVersion"
+	testImplementation (
+		"org.spockframework:spock-core:$spockVersion"
+	)
 }
 
 // codenarc groovy source analyses
@@ -83,32 +89,50 @@ codenarc{
 	}
 }
 
-
-
 // [tasks] configuration //
+tasks.withType(Test) {
+	useJUnitPlatform()
+	maxParallelForks = Runtime.runtime.availableProcessors() / 2
+}
 jar {
-	// execute check task when create the jar
 	dependsOn 'check'
 }
 
 check {
-	// create the code coverage report
-	dependsOn 'cobertura'
+	dependsOn 'clean'
 }
 
 // [tasks] definition
-task listJars {
-	description = 'print out the jars used by the project'
-	doLast {
-		configurations.compile.each { File file -> println file.name }
-	}
-}
-
-tasks.withType(Test) {
-	maxParallelForks = Runtime.runtime.availableProcessors() / 2
-}
-task unitTest(type: Test) {
+task uniTest(type: Test) {
+	description = 'unit tests task'
 	exclude '**/*ISpec*'
 	exclude '**/*FSpec*'
 }
+task intTest(type: Test) {
+	description = 'integration tests task'
+	exclude '**/*USpec*'
+	exclude '**/*FSpec*'
+}
+task funTest(type: Test) {
+	description = 'functional tests task'
+	exclude '**/*USpec*'
+	exclude '**/*ISpec*'
+}
+gradle.startParameter.excludedTaskNames += "uniTest"
+gradle.startParameter.excludedTaskNames += "intTest"
+gradle.startParameter.excludedTaskNames += "funTest"
+
+// required to work with jitpack.io
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			groupId = 'com.github.grational'
+			artifactId = 'lemap'
+			version = scmVersion.version // '0.5.0' (remove -SNAPSHOT for releases)
+
+			from components.java
+		}
+	}
+}
+
 // vim: ft=groovy:fdm=indent
